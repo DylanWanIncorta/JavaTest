@@ -21,41 +21,50 @@ import javax.xml.transform.stream.StreamResult;
 public class SmartImport {
 
     public static void main(String[] args) {
-		String src;
+	
+		String zipf = args[0];
+		String old_src = args[1];
+		String new_src = args[2];
 		
-		String old_src = "incorta_metadata";
-		String new_src = "InCorta_Metadata";
-		
-		try {
+		DocumentBuilderFactory docBuilderFactory = DocumentBuilderFactory.newInstance();
 
-			DocumentBuilderFactory docBuilderFactory = DocumentBuilderFactory.newInstance();
+		String in_folder_name = zipf;
+		String out_folder_name = "new";
+		
+		File in_folder = new File(in_folder_name+"\\schemas");
+		File[] listOfFiles = in_folder.listFiles();
+		
+		File out_folder1 = new File(out_folder_name);
+		File out_folder2 = new File(out_folder_name+"\\schemas");
+		
+    	if(!out_folder1.exists()){
+//			System.out.println("Create new");
+    		out_folder1.mkdir();
+			out_folder2.mkdir();
+    	}
+		
+		
+
+    	try {
 			DocumentBuilder docBuilder = docBuilderFactory.newDocumentBuilder();
-			Document doc = docBuilder.parse (new File("558_loader.xml"));
-
-			// normalize text representation
-			doc.getDocumentElement().normalize();
-//			System.out.println ("Root element of the doc is " + doc.getDocumentElement().getNodeName());
-
-			NodeList listOfSqls = doc.getElementsByTagName("sql");
-			int totalSqls = listOfSqls.getLength();
-//			System.out.println("Total no of sqls : " + totalSqls);
-
-			for(int i=0; i<totalSqls; i++) {
-
-				Node sqlNode = listOfSqls.item(i);
-				if(sqlNode.getNodeType() == Node.ELEMENT_NODE) {
-
-					Element firstElement = (Element)sqlNode;              
-
-					src = firstElement.getAttribute("source");
-					System.out.println("Source :"+src);
-					if (src == old_src ) 
-					  firstElement.setAttribute("source",new_src);
-
-				}
-			} //end of for loop with s var
 			
-			prettyPrint(doc);
+			for (int i = 0; i < listOfFiles.length; i++) {
+				File file = listOfFiles[i];
+			
+				Document doc = docBuilder.parse(file);
+				doc.getDocumentElement().normalize();
+			
+				if (file.getName().endsWith("loader.xml")) {
+					replaceSource(old_src, new_src, doc, "sql");
+				} else if (file.getName().endsWith("schema.xml")) {
+					replaceSource(old_src, new_src, doc, "table");
+				} else {
+					System.out.println("Skip "+ file.getName());
+				}
+			
+				writeFile(doc, out_folder_name+"\\schemas\\"+file.getName());
+			}
+
 
 		} catch (SAXParseException err) {
 			System.out.println ("** Parsing error" + ", line " + err.getLineNumber () + ", uri " + err.getSystemId ());
@@ -66,20 +75,43 @@ public class SmartImport {
 		} catch (Throwable t) {
 			t.printStackTrace ();
 		}  
-		
-		
-		
 	}
 	
-	public static final void prettyPrint(Document xml) throws Exception {
+	public static final void replaceSource(String old_src, String new_src, Document doc, String tag) throws Exception {
 
+			NodeList list = doc.getElementsByTagName(tag);
+			// System.out.println("Search tag "+tag);
+			// System.out.println("Old Source:"+old_src);
+			// System.out.println("New Source:"+new_src);
+			int total = list.getLength();
+			//System.out.println("Found "+total+" elements");
+			
+			for(int i=0; i<total; i++) {
+
+				Node tagNode = list.item(i);
+				if(tagNode.getNodeType() == Node.ELEMENT_NODE) {
+
+					Element firstElement = (Element)tagNode;              
+
+					if (firstElement.getAttribute("source").equals(old_src)) {
+						System.out.println("Replacing "+firstElement.getAttribute("source")+" with "+new_src);
+						firstElement.setAttribute("source", new_src);
+
+					}
+				}
+			} 
+	}
+	
+	
+	public static final void writeFile(Document xml, String full_file_name) throws Exception {
+
+	System.out.println("Writing to:"+full_file_name);
         Transformer tf = TransformerFactory.newInstance().newTransformer();
         tf.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
         tf.setOutputProperty(OutputKeys.INDENT, "yes");
-        Writer out = new StringWriter();
+        // Writer out = new StringWriter();
+		File out = new File(full_file_name);
         tf.transform(new DOMSource(xml), new StreamResult(out));
-
-        System.out.println(out.toString());
 
     }
 
