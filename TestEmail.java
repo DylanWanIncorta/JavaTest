@@ -23,17 +23,17 @@ public class TestEmail {
 		
 		Properties props = new Properties();
 		
-		props.put("mail.smtp.host", "relay.smtp.avagotech.net");
+		props.put("mail.smtp.host", "relay.smtp.av.net");
 		props.put("mail.smtp.port", "25");
 		props.put("mail.smtp.socketFactory.port", "");
 		props.put("mail.smtp.socketFactory.class", "");
 		props.put("mail.smtp.auth", "false");
 		props.put("auth.forgot.password", "XXXX");
-		props.put("auth.forgot.password.email", "ajit.oak@avagotech.com");
+		props.put("auth.forgot.password.email", "a@av.com");
 		
 		
-		String fromAddress = "ajit.oak@avagotech.com";
-		String toAddress = "dylan.wan@incorta.com";
+		String fromAddress = "a@av.com";
+		String toAddress = "dy@in.com";
 		String ccAddress = "";
 		String bccAddress = "";
 
